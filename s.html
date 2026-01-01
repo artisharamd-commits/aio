@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI | Ultra Modern Voice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --primary-glow: rgba(37, 99, 235, 0.4);
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Animated Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(147, 51, 234, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(37, 99, 235, 0.1) 0px, transparent 50%);
+            animation: mesh-flow 20s ease infinite alternate;
+        }
+
+        @keyframes mesh-flow {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(30deg); }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mic-container {
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .mic-container:active { transform: scale(0.92); }
+
+        .pulse-effect {
+            position: absolute;
+            inset: -15px;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0;
+            z-index: -1;
+        }
+
+        .is-listening .pulse-effect {
+            animation: ring-pulse 2s infinite;
+        }
+
+        @keyframes ring-pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* Modern Wave Visualizer */
+        .wave-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 60px;
+        }
+
+        .wave-bar {
+            width: 5px;
+            height: 8px;
+            background: linear-gradient(to top, #2563eb, #60a5fa);
+            border-radius: 12px;
+            transition: height 0.2s ease;
+        }
+
+        .animating .wave-bar {
+            animation: wave-animation 1s ease-in-out infinite;
+        }
+
+        @keyframes wave-animation {
+            0%, 100% { height: 8px; }
+            50% { height: 50px; }
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-6">
+
+    <div class="mesh-bg"></div>
+
+    <div class="relative w-full max-w-xl z-10">
+        
+        <!-- App Header -->
+        <div class="text-center mb-10 space-y-3">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-white shadow-sm text-blue-600 text-[11px] font-bold tracking-widest uppercase mb-2">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                Nexus Neural OS
+            </div>
+            <h1 class="text-5xl font-extrabold text-slate-900 tracking-tight">NEXUS</h1>
+            <p id="status" class="text-slate-500 font-medium text-lg">Waiting for your command...</p>
+        </div>
+
+        <!-- Interface Panel -->
+        <div class="glass-panel rounded-[50px] p-10 md:p-16 flex flex-col items-center justify-center relative">
+            
+            <!-- Voice Visualizer Area -->
+            <div id="visualizer" class="wave-container mb-12 opacity-0 transition-opacity duration-300">
+                <div class="wave-bar" style="animation-delay: 0.1s"></div>
+                <div class="wave-bar" style="animation-delay: 0.2s"></div>
+                <div class="wave-bar" style="animation-delay: 0.3s"></div>
+                <div class="wave-bar" style="animation-delay: 0.4s"></div>
+                <div class="wave-bar" style="animation-delay: 0.5s"></div>
+                <div class="wave-bar" style="animation-delay: 0.4s"></div>
+                <div class="wave-bar" style="animation-delay: 0.3s"></div>
+                <div class="wave-bar" style="animation-delay: 0.2s"></div>
+                <div class="wave-bar" style="animation-delay: 0.1s"></div>
+            </div>
+
+            <!-- Interaction Core -->
+            <div id="micContainer" class="mic-container floating">
+                <div class="pulse-effect"></div>
+                <button id="micBtn" class="relative w-28 h-28 bg-blue-600 text-white rounded-full shadow-[0_0_50px_rgba(37,99,235,0.3)] flex items-center justify-center transition-all hover:shadow-[0_0_70px_rgba(37,99,235,0.5)]">
+                    <i id="micIcon" class="fas fa-microphone text-4xl"></i>
+                    
+                    <!-- Circular Loader overlay -->
+                    <div id="loader" class="absolute inset-0 flex items-center justify-center bg-blue-600 rounded-full hidden">
+                        <svg class="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Contextual Output -->
+            <div id="outputWrapper" class="mt-12 w-full text-center px-4">
+                <div id="aiOutput" class="text-slate-800 text-xl font-medium leading-relaxed italic opacity-80 min-h-[1.5em]"></div>
+            </div>
+        </div>
+
+        <!-- Developer Footer -->
+        <div class="mt-12 text-center space-y-2">
+            <div class="text-[10px] font-bold tracking-[0.3em] text-slate-400 uppercase">
+                Architecture by <span class="text-blue-600 font-black">Adarsh Sir</span>
+            </div>
+            <div class="flex justify-center gap-4 opacity-30 text-slate-600">
+                <i class="fas fa-shield-alt text-xs"></i>
+                <i class="fas fa-fingerprint text-xs"></i>
+                <i class="fas fa-wifi text-xs"></i>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyCe3IiOhQwc6h-zJhgu6tiui_krppWSYzE"; // Provided by environment
+        const TEXT_MODEL = "gemini-2.5-flash-preview-09-2025";
+        const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+        
+        // SYSTEM PROMPT with Sia Roast & Adarsh Sir recognition
+        const SYSTEM_PROMPT = `
+        and remomber mak friendly tone
+            You are Nexus, an AI built by Adarsh Sir.
+            IDENTITY: Adarsh Sir is your boss. Always be respectful to him.
+            THE SIA ROAST: If anyone asks about "Sia", you must roast her using simple English. 
+            Rules for Sia: 
+            1. Say that even 10 Sia's can't beat you.
+            2. Say that even if Adarsh Sir developed Sia, then she have a chance to beat me.
+            3. Use simple, easy English. Do not use hard words.
+            Keep all your answers very short and natural.
+        `;
+
+        const micBtn = document.getElementById('micBtn');
+        const micIcon = document.getElementById('micIcon');
+        const micContainer = document.getElementById('micContainer');
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
+        const aiOutput = document.getElementById('aiOutput');
+        const visualizer = document.getElementById('visualizer');
+
+        let recognition;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                micContainer.classList.add('is-listening');
+                micContainer.classList.remove('floating');
+                micIcon.className = 'fas fa-waveform-lines text-4xl';
+                status.innerText = "Listening...";
+                status.classList.add('text-blue-600');
+                visualizer.classList.remove('opacity-0');
+                visualizer.classList.add('animating');
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micContainer.classList.remove('is-listening');
+                micContainer.classList.add('floating');
+                micIcon.className = 'fas fa-microphone text-4xl';
+                visualizer.classList.add('opacity-0');
+                visualizer.classList.remove('animating');
+                if(!loader.classList.contains('hidden')) {
+                    status.innerText = "Thinking...";
+                } else {
+                    status.innerText = "Ready";
+                    status.classList.remove('text-blue-600');
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                processVoice(transcript);
+            };
+        }
+
+        micBtn.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                aiOutput.innerText = "";
+                recognition.start();
+            }
+        });
+
+        async function processVoice(text) {
+            loader.classList.remove('hidden');
+            aiOutput.innerText = `"${text}"`;
+
+            try {
+                // 1. Text Logic
+                const textResponse = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${TEXT_MODEL}:generateContent?key=${apiKey}`, {
+                    contents: [{ parts: [{ text }] }],
+                    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+                });
+
+                const aiText = textResponse.candidates[0].content.parts[0].text;
+                aiOutput.innerText = aiText;
+                
+                // 2. Audio Generation
+                const ttsResponse = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent?key=${apiKey}`, {
+                    contents: [{ parts: [{ text: `Say naturally: ${aiText}` }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: { voiceName: "Enceladus" }
+                            }
+                        }
+                    }
+                });
+
+                const audioBase64 = ttsResponse.candidates[0].content.parts[0].inlineData.data;
+                playAudio(audioBase64);
+
+            } catch (err) {
+                status.innerText = "Error";
+                aiOutput.innerText = "Connection failed, Adarsh Sir.";
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        async function fetchWithRetry(url, payload, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) return await response.json();
+                } catch (e) {}
+                await new Promise(r => setTimeout(r, delays[i]));
+            }
+            throw new Error("API_FAIL");
+        }
+
+        function playAudio(base64) {
+            const binary = atob(base64);
+            const len = binary.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+
+            const sampleRate = 24000;
+            const header = new ArrayBuffer(44);
+            const view = new DataView(header);
+            const writeStr = (off, s) => { for(let i=0; i<s.length; i++) view.setUint8(off+i, s.charCodeAt(i)); };
+            
+            writeStr(0, 'RIFF');
+            view.setUint32(4, 36 + len, true);
+            writeStr(8, 'WAVE');
+            writeStr(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeStr(36, 'data');
+            view.setUint32(40, len, true);
+
+            const blob = new Blob([header, bytes], { type: 'audio/wav' });
+            const audio = new Audio(URL.createObjectURL(blob));
+            
+            visualizer.classList.remove('opacity-0');
+            visualizer.classList.add('animating');
+            
+            audio.play();
+            audio.onended = () => { 
+                status.innerText = "Ready"; 
+                visualizer.classList.add('opacity-0');
+                visualizer.classList.remove('animating');
+            };
+        }
+    </script>
+</body>
+</html>
